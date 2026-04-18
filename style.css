@@ -140,6 +140,17 @@ h1 {
   color: #7a2a16;
 }
 
+.btn-voice {
+  background: linear-gradient(120deg, #7b1fa2 0%, #e53935 100%);
+  color: #fff;
+}
+
+.voice-status {
+  margin: 0;
+  color: #6c3346;
+  font-weight: 700;
+}
+
 .btn:focus-visible,
 .day-btn:focus-visible {
   outline: 3px solid #1247b8;
@@ -169,6 +180,7 @@ h1 {
   border-radius: 18px;
   padding: 1rem;
   box-shadow: 0 12px 24px rgba(153, 52, 19, 0.09);
+  backdrop-filter: blur(4px);
 }
 
 .image-link {

@@ -83,6 +83,9 @@ const dateLabel = document.getElementById("dateLabel");
 const timeContext = document.getElementById("timeContext");
 const vegOnlyToggle = document.getElementById("vegOnlyToggle");
 const shuffleBtn = document.getElementById("shuffleBtn");
+const voiceBtn = document.getElementById("voiceBtn");
+const voiceStatus = document.getElementById("voiceStatus");
+const imageCache = new Map();
 
 init();
 
@@ -95,6 +98,7 @@ function init() {
 function attachEvents() {
   vegOnlyToggle.addEventListener("change", () => updateSuggestions(selectedDate, true));
   shuffleBtn.addEventListener("click", () => updateSuggestions(selectedDate, true, true));
+  voiceBtn.addEventListener("click", startVoiceSearch);
 }
 
 function renderWeekStrip(baseDate) {
@@ -183,7 +187,7 @@ function renderCards() {
   currentSuggestions.forEach((dish, index) => {
     const clone = template.content.cloneNode(true);
     const image = clone.querySelector(".dish-image");
-    image.src = getDishImage(dish);
+    image.src = getFallbackSvg(dish);
     image.alt = `${dish.tamilName} - குறிப்பு படம்`;
     image.loading = "lazy";
     image.referrerPolicy = "no-referrer";
@@ -192,6 +196,9 @@ function renderCards() {
     imageLink.href = youtubeLink;
     image.addEventListener("error", () => {
       image.src = getFallbackSvg(dish);
+    });
+    resolveDishImage(dish).then((url) => {
+      image.src = url;
     });
     clone.querySelector(".tamil-name").textContent = `${index === 0 ? "⭐ " : ""}${dish.tamilName}`;
     clone.querySelector(".english-name").textContent = dish.englishName;
@@ -211,6 +218,41 @@ function getYouTubeLink(dish) {
 function getDishImage(dish) {
   const query = `${dish.englishName} curry south indian food`;
   return `https://source.unsplash.com/800x500/?${encodeURIComponent(query)}`;
+}
+
+async function resolveDishImage(dish) {
+  if (imageCache.has(dish.id)) return imageCache.get(dish.id);
+
+  const candidates = [
+    dish.englishName,
+    dish.englishName.replace("Curry", "").trim(),
+    dish.tamilName,
+    `${dish.englishName} dish`
+  ];
+
+  for (const title of candidates) {
+    const wikiImage = await getWikimediaImage(title);
+    if (wikiImage) {
+      imageCache.set(dish.id, wikiImage);
+      return wikiImage;
+    }
+  }
+
+  const unsplash = getDishImage(dish);
+  imageCache.set(dish.id, unsplash);
+  return unsplash;
+}
+
+async function getWikimediaImage(title) {
+  try {
+    const summaryUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`;
+    const response = await fetch(summaryUrl);
+    if (!response.ok) return "";
+    const data = await response.json();
+    return data?.thumbnail?.source || "";
+  } catch {
+    return "";
+  }
 }
 
 function getFallbackSvg(dish) {
@@ -244,6 +286,59 @@ async function shareDishLink(dish) {
   }
 
   window.prompt("இந்த இணைப்பை நகலெடுத்து பகிருங்கள்:", text);
+}
+
+function startVoiceSearch() {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) {
+    voiceStatus.textContent = "இந்த உலாவியில் குரல் தேடல் இல்லை.";
+    return;
+  }
+
+  const recognition = new SpeechRecognition();
+  recognition.lang = "ta-IN";
+  recognition.interimResults = false;
+  recognition.maxAlternatives = 1;
+
+  voiceStatus.textContent = "கேட்கிறது... கறி பெயரைச் சொல்லுங்கள்.";
+
+  recognition.onresult = (event) => {
+    const transcript = event.results?.[0]?.[0]?.transcript?.trim() || "";
+    if (!transcript) {
+      voiceStatus.textContent = "குரல் புரியவில்லை. மீண்டும் முயற்சிக்கவும்.";
+      return;
+    }
+    handleVoiceDishSearch(transcript);
+  };
+
+  recognition.onerror = () => {
+    voiceStatus.textContent = "குரல் தேடல் செயல்படவில்லை. மீண்டும் முயற்சிக்கவும்.";
+  };
+
+  recognition.onend = () => {
+    if (voiceStatus.textContent.includes("கேட்கிறது")) {
+      voiceStatus.textContent = "குரல் தேடல் நிறுத்தப்பட்டது.";
+    }
+  };
+
+  recognition.start();
+}
+
+function handleVoiceDishSearch(spokenText) {
+  const spoken = spokenText.toLowerCase();
+  const matchedDish = dishes.find((dish) => {
+    return dish.tamilName.toLowerCase().includes(spoken) || dish.englishName.toLowerCase().includes(spoken);
+  });
+
+  const link = matchedDish
+    ? getYouTubeLink(matchedDish)
+    : `https://www.youtube.com/results?search_query=${encodeURIComponent(`${spokenText} தமிழ் சமையல்`)}`;
+
+  voiceStatus.textContent = matchedDish
+    ? `“${matchedDish.tamilName}” கிடைத்தது. YouTube திறக்கப்படுகிறது...`
+    : `“${spokenText}” அடிப்படையில் YouTube தேடல் திறக்கப்படுகிறது...`;
+
+  window.open(link, "_blank", "noopener");
 }
 
 function recentIdsFor(dateKey, days = 7) {

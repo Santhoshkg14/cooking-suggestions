@@ -76,6 +76,23 @@ const history = loadHistory();
 const today = new Date();
 let selectedDate = formatDateKey(today);
 let currentSuggestions = [];
+const CATEGORY_IMAGE_MAP = {
+  "குழம்பு": "https://upload.wikimedia.org/wikipedia/commons/4/4c/Chicken_curry_dish.jpg",
+  "பொரியல்": "https://upload.wikimedia.org/wikipedia/commons/d/d8/Bhindi_masala.jpg",
+  "கூட்டு": "https://upload.wikimedia.org/wikipedia/commons/9/9f/Indian_vegetable_curry.jpg",
+  "சாம்பார்": "https://upload.wikimedia.org/wikipedia/commons/9/93/South_Indian_sambar.jpg"
+};
+const DISH_IMAGE_OVERRIDES = {
+  "meen-kuzhambu": "https://upload.wikimedia.org/wikipedia/commons/a/a8/Fish_curry_with_rice.jpg",
+  "mutton-kuzhambu": "https://upload.wikimedia.org/wikipedia/commons/7/70/Mutton_curry.jpg",
+  "chicken-kuzhambu": "https://upload.wikimedia.org/wikipedia/commons/3/35/Indian_Chicken_Curry.jpg",
+  "vendakkai-curry": "https://upload.wikimedia.org/wikipedia/commons/d/d8/Bhindi_masala.jpg",
+  "kathirikkai-curry": "https://upload.wikimedia.org/wikipedia/commons/2/20/Brinjal_curry.jpg",
+  "keerai-kootu": "https://upload.wikimedia.org/wikipedia/commons/5/56/Spinach_curry.jpg",
+  "kondakadalai-curry": "https://upload.wikimedia.org/wikipedia/commons/a/a9/Chana_masala.jpg",
+  "sambar": "https://upload.wikimedia.org/wikipedia/commons/9/93/South_Indian_sambar.jpg"
+};
+const FALLBACK_IMAGE = "https://upload.wikimedia.org/wikipedia/commons/6/6f/Indian_food.jpg";
 
 const weekStrip = document.getElementById("weekStrip");
 const cards = document.getElementById("cards");
@@ -182,6 +199,14 @@ function renderCards() {
 
   currentSuggestions.forEach((dish, index) => {
     const clone = template.content.cloneNode(true);
+    const image = clone.querySelector(".dish-image");
+    image.src = getDishImage(dish);
+    image.alt = `${dish.tamilName} - குறிப்பு படம்`;
+    image.loading = "lazy";
+    image.referrerPolicy = "no-referrer";
+    image.addEventListener("error", () => {
+      image.src = FALLBACK_IMAGE;
+    });
     clone.querySelector(".tamil-name").textContent = `${index === 0 ? "⭐ " : ""}${dish.tamilName}`;
     clone.querySelector(".english-name").textContent = dish.englishName;
     clone.querySelector(".category").textContent = dish.category;
@@ -214,6 +239,10 @@ function renderCards() {
 function getYouTubeLink(dish) {
   const query = `${dish.tamilName} தமிழ் சமையல்`;
   return `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}&sp=EgIQAQ%253D%253D`;
+}
+
+function getDishImage(dish) {
+  return DISH_IMAGE_OVERRIDES[dish.id] || CATEGORY_IMAGE_MAP[dish.category] || FALLBACK_IMAGE;
 }
 
 async function shareDishLink(dish) {

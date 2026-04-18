@@ -85,7 +85,6 @@ const vegOnlyToggle = document.getElementById("vegOnlyToggle");
 const shuffleBtn = document.getElementById("shuffleBtn");
 const voiceBtn = document.getElementById("voiceBtn");
 const voiceStatus = document.getElementById("voiceStatus");
-const imageCache = new Map();
 
 init();
 
@@ -187,18 +186,14 @@ function renderCards() {
   currentSuggestions.forEach((dish, index) => {
     const clone = template.content.cloneNode(true);
     const image = clone.querySelector(".dish-image");
-    image.src = getFallbackSvg(dish);
-    image.alt = `${dish.tamilName} - குறிப்பு படம்`;
+    image.src = getDishImage(dish);
+    image.alt = dish.tamilName;
     image.loading = "lazy";
-    image.referrerPolicy = "no-referrer";
     const youtubeLink = getYouTubeLink(dish);
     const imageLink = clone.querySelector(".image-link");
     imageLink.href = youtubeLink;
     image.addEventListener("error", () => {
-      image.src = getFallbackSvg(dish);
-    });
-    resolveDishImage(dish).then((url) => {
-      image.src = url;
+      image.src = getDishImage(dish);
     });
     clone.querySelector(".tamil-name").textContent = `${index === 0 ? "⭐ " : ""}${dish.tamilName}`;
     clone.querySelector(".english-name").textContent = dish.englishName;
@@ -216,49 +211,12 @@ function getYouTubeLink(dish) {
 }
 
 function getDishImage(dish) {
-  const query = `${dish.englishName} curry south indian food`;
-  return `https://source.unsplash.com/800x500/?${encodeURIComponent(query)}`;
-}
-
-async function resolveDishImage(dish) {
-  if (imageCache.has(dish.id)) return imageCache.get(dish.id);
-
-  const candidates = [
-    dish.englishName,
-    dish.englishName.replace("Curry", "").trim(),
-    dish.tamilName,
-    `${dish.englishName} dish`
-  ];
-
-  for (const title of candidates) {
-    const wikiImage = await getWikimediaImage(title);
-    if (wikiImage) {
-      imageCache.set(dish.id, wikiImage);
-      return wikiImage;
-    }
-  }
-
-  const unsplash = getDishImage(dish);
-  imageCache.set(dish.id, unsplash);
-  return unsplash;
-}
-
-async function getWikimediaImage(title) {
-  try {
-    const summaryUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`;
-    const response = await fetch(summaryUrl);
-    if (!response.ok) return "";
-    const data = await response.json();
-    return data?.thumbnail?.source || "";
-  } catch {
-    return "";
-  }
-}
-
-function getFallbackSvg(dish) {
+  const icon = dish.vegetarian ? "🥗" : "🍗";
+  const level = dish.spice === "கார கார" ? "#b71c1c" : dish.spice === "மிதமான" ? "#d84315" : "#ef6c00";
+  const sub = `${dish.category} • ${dish.spice}`;
   const label = dish.tamilName;
   return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(
-    `<svg xmlns='http://www.w3.org/2000/svg' width='800' height='500'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0%' stop-color='#ffd6ba'/><stop offset='100%' stop-color='#ff9b68'/></linearGradient></defs><rect fill='url(#g)' width='100%' height='100%'/><text x='50%' y='46%' text-anchor='middle' font-size='58' fill='#6f1f10'>🍛</text><text x='50%' y='60%' text-anchor='middle' font-size='38' fill='#6f1f10' font-family='Noto Sans Tamil, sans-serif'>${label}</text></svg>`
+    `<svg xmlns='http://www.w3.org/2000/svg' width='900' height='550'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0%' stop-color='#ffe0cc'/><stop offset='100%' stop-color='#ffb082'/></linearGradient></defs><rect fill='url(#g)' width='100%' height='100%'/><rect x='28' y='28' width='844' height='494' rx='24' fill='rgba(255,255,255,0.42)' stroke='${level}' stroke-width='4'/><text x='50%' y='42%' text-anchor='middle' font-size='82'>${icon}</text><text x='50%' y='56%' text-anchor='middle' font-size='50' fill='#5d1d10' font-family='Noto Serif Tamil, serif'>${label}</text><text x='50%' y='68%' text-anchor='middle' font-size='32' fill='${level}' font-family='Noto Sans Tamil, sans-serif'>${sub}</text></svg>`
   )}`;
 }
 

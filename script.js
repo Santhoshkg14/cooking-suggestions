@@ -83,7 +83,6 @@ const dateLabel = document.getElementById("dateLabel");
 const timeContext = document.getElementById("timeContext");
 const vegOnlyToggle = document.getElementById("vegOnlyToggle");
 const shuffleBtn = document.getElementById("shuffleBtn");
-const speakAllBtn = document.getElementById("speakAllBtn");
 
 init();
 
@@ -96,7 +95,6 @@ function init() {
 function attachEvents() {
   vegOnlyToggle.addEventListener("change", () => updateSuggestions(selectedDate, true));
   shuffleBtn.addEventListener("click", () => updateSuggestions(selectedDate, true, true));
-  speakAllBtn.addEventListener("click", speakAll);
 }
 
 function renderWeekStrip(baseDate) {
@@ -205,37 +203,43 @@ function renderCards() {
     });
 
     clone.querySelector(".tip-text").textContent = dish.tip;
-    clone.querySelector(".listen-btn").addEventListener("click", () => speakDish(dish));
+    const link = clone.querySelector(".video-link");
+    link.href = getYouTubeLink(dish);
+    const shareBtn = clone.querySelector(".share-link");
+    shareBtn.addEventListener("click", () => shareDishLink(dish));
     cards.appendChild(clone);
   });
 }
 
-function speakDish(dish) {
-  const text = `${dish.tamilName}. பொருட்கள்: ${dish.ingredients.join(" , ")}. செய்முறை: ${dish.steps.join(" ")}. குறிப்பு: ${dish.tip}`;
-  speakText(text);
+function getYouTubeLink(dish) {
+  const query = `${dish.tamilName} தமிழ் சமையல்`;
+  return `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}&sp=EgIQAQ%253D%253D`;
 }
 
-function speakAll() {
-  if (!currentSuggestions.length) return;
-  const combined = currentSuggestions
-    .map((dish, i) => `பரிந்துரை ${i + 1}. ${dish.tamilName}. பொருட்கள் ${dish.ingredients.join(" , ")}. குறிப்பு ${dish.tip}.`)
-    .join(" ");
-  speakText(combined);
-}
+async function shareDishLink(dish) {
+  const youtubeLink = getYouTubeLink(dish);
+  const text = `${dish.tamilName} செய்முறை வீடியோ: ${youtubeLink}`;
 
-function speakText(text) {
-  if (!("speechSynthesis" in window)) {
-    alert("இந்த உலாவியில் குரல் வசதி இல்லை.");
+  if (navigator.share) {
+    try {
+      await navigator.share({
+        title: `${dish.tamilName} - அம்மாவின் சமையல் உதவியாளர்`,
+        text,
+        url: youtubeLink
+      });
+      return;
+    } catch {
+      // user cancelled share; fallback to clipboard
+    }
+  }
+
+  if (navigator.clipboard?.writeText) {
+    await navigator.clipboard.writeText(text);
+    alert("இணைப்பு நகலெடுக்கப்பட்டது. பகிரலாம்!");
     return;
   }
 
-  window.speechSynthesis.cancel();
-  const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = "ta-IN";
-  utterance.rate = 0.85;
-  utterance.pitch = 1;
-  utterance.volume = 1;
-  window.speechSynthesis.speak(utterance);
+  window.prompt("இந்த இணைப்பை நகலெடுத்து பகிருங்கள்:", text);
 }
 
 function recentIdsFor(dateKey, days = 7) {

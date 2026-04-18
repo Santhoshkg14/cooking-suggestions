@@ -83,6 +83,7 @@ const dateLabel = document.getElementById("dateLabel");
 const timeContext = document.getElementById("timeContext");
 const vegOnlyToggle = document.getElementById("vegOnlyToggle");
 const shuffleBtn = document.getElementById("shuffleBtn");
+const speakAllBtn = document.getElementById("speakAllBtn");
 
 init();
 
@@ -95,6 +96,7 @@ function init() {
 function attachEvents() {
   vegOnlyToggle.addEventListener("change", () => updateSuggestions(selectedDate, true));
   shuffleBtn.addEventListener("click", () => updateSuggestions(selectedDate, true, true));
+  speakAllBtn.addEventListener("click", speakAll);
 }
 
 function renderWeekStrip(baseDate) {
@@ -203,15 +205,37 @@ function renderCards() {
     });
 
     clone.querySelector(".tip-text").textContent = dish.tip;
-    const link = clone.querySelector(".video-link");
-    link.href = getYouTubeLink(dish);
+    clone.querySelector(".listen-btn").addEventListener("click", () => speakDish(dish));
     cards.appendChild(clone);
   });
 }
 
-function getYouTubeLink(dish) {
-  const query = `${dish.tamilName} சமையல் தமிழ் recipe`;
-  return `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`;
+function speakDish(dish) {
+  const text = `${dish.tamilName}. பொருட்கள்: ${dish.ingredients.join(" , ")}. செய்முறை: ${dish.steps.join(" ")}. குறிப்பு: ${dish.tip}`;
+  speakText(text);
+}
+
+function speakAll() {
+  if (!currentSuggestions.length) return;
+  const combined = currentSuggestions
+    .map((dish, i) => `பரிந்துரை ${i + 1}. ${dish.tamilName}. பொருட்கள் ${dish.ingredients.join(" , ")}. குறிப்பு ${dish.tip}.`)
+    .join(" ");
+  speakText(combined);
+}
+
+function speakText(text) {
+  if (!("speechSynthesis" in window)) {
+    alert("இந்த உலாவியில் குரல் வசதி இல்லை.");
+    return;
+  }
+
+  window.speechSynthesis.cancel();
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = "ta-IN";
+  utterance.rate = 0.85;
+  utterance.pitch = 1;
+  utterance.volume = 1;
+  window.speechSynthesis.speak(utterance);
 }
 
 function recentIdsFor(dateKey, days = 7) {

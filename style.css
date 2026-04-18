@@ -127,12 +127,9 @@ h1 {
 }
 
 .btn-secondary,
-.btn-video {
+.btn-listen {
   background: #ffe5cd;
   color: #7a2a16;
-  text-decoration: none;
-  display: inline-block;
-  text-align: center;
 }
 
 .btn:focus-visible,

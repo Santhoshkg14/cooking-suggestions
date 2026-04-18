@@ -76,23 +76,6 @@ const history = loadHistory();
 const today = new Date();
 let selectedDate = formatDateKey(today);
 let currentSuggestions = [];
-const CATEGORY_IMAGE_MAP = {
-  "குழம்பு": "https://upload.wikimedia.org/wikipedia/commons/4/4c/Chicken_curry_dish.jpg",
-  "பொரியல்": "https://upload.wikimedia.org/wikipedia/commons/d/d8/Bhindi_masala.jpg",
-  "கூட்டு": "https://upload.wikimedia.org/wikipedia/commons/9/9f/Indian_vegetable_curry.jpg",
-  "சாம்பார்": "https://upload.wikimedia.org/wikipedia/commons/9/93/South_Indian_sambar.jpg"
-};
-const DISH_IMAGE_OVERRIDES = {
-  "meen-kuzhambu": "https://upload.wikimedia.org/wikipedia/commons/a/a8/Fish_curry_with_rice.jpg",
-  "mutton-kuzhambu": "https://upload.wikimedia.org/wikipedia/commons/7/70/Mutton_curry.jpg",
-  "chicken-kuzhambu": "https://upload.wikimedia.org/wikipedia/commons/3/35/Indian_Chicken_Curry.jpg",
-  "vendakkai-curry": "https://upload.wikimedia.org/wikipedia/commons/d/d8/Bhindi_masala.jpg",
-  "kathirikkai-curry": "https://upload.wikimedia.org/wikipedia/commons/2/20/Brinjal_curry.jpg",
-  "keerai-kootu": "https://upload.wikimedia.org/wikipedia/commons/5/56/Spinach_curry.jpg",
-  "kondakadalai-curry": "https://upload.wikimedia.org/wikipedia/commons/a/a9/Chana_masala.jpg",
-  "sambar": "https://upload.wikimedia.org/wikipedia/commons/9/93/South_Indian_sambar.jpg"
-};
-const FALLBACK_IMAGE = "https://upload.wikimedia.org/wikipedia/commons/6/6f/Indian_food.jpg";
 
 const weekStrip = document.getElementById("weekStrip");
 const cards = document.getElementById("cards");
@@ -204,32 +187,16 @@ function renderCards() {
     image.alt = `${dish.tamilName} - குறிப்பு படம்`;
     image.loading = "lazy";
     image.referrerPolicy = "no-referrer";
+    const youtubeLink = getYouTubeLink(dish);
+    const imageLink = clone.querySelector(".image-link");
+    imageLink.href = youtubeLink;
     image.addEventListener("error", () => {
-      image.src = FALLBACK_IMAGE;
+      image.src = getFallbackSvg(dish);
     });
     clone.querySelector(".tamil-name").textContent = `${index === 0 ? "⭐ " : ""}${dish.tamilName}`;
     clone.querySelector(".english-name").textContent = dish.englishName;
-    clone.querySelector(".category").textContent = dish.category;
-    clone.querySelector(".spice").textContent = dish.spice;
-    clone.querySelector(".time").textContent = dish.time;
-
-    const ingredientList = clone.querySelector(".ingredients");
-    dish.ingredients.forEach((item) => {
-      const li = document.createElement("li");
-      li.textContent = item;
-      ingredientList.appendChild(li);
-    });
-
-    const stepsList = clone.querySelector(".steps");
-    dish.steps.forEach((step) => {
-      const li = document.createElement("li");
-      li.textContent = step;
-      stepsList.appendChild(li);
-    });
-
-    clone.querySelector(".tip-text").textContent = dish.tip;
     const link = clone.querySelector(".video-link");
-    link.href = getYouTubeLink(dish);
+    link.href = youtubeLink;
     const shareBtn = clone.querySelector(".share-link");
     shareBtn.addEventListener("click", () => shareDishLink(dish));
     cards.appendChild(clone);
@@ -242,7 +209,15 @@ function getYouTubeLink(dish) {
 }
 
 function getDishImage(dish) {
-  return DISH_IMAGE_OVERRIDES[dish.id] || CATEGORY_IMAGE_MAP[dish.category] || FALLBACK_IMAGE;
+  const query = `${dish.englishName} curry south indian food`;
+  return `https://source.unsplash.com/800x500/?${encodeURIComponent(query)}`;
+}
+
+function getFallbackSvg(dish) {
+  const label = dish.tamilName;
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(
+    `<svg xmlns='http://www.w3.org/2000/svg' width='800' height='500'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0%' stop-color='#ffd6ba'/><stop offset='100%' stop-color='#ff9b68'/></linearGradient></defs><rect fill='url(#g)' width='100%' height='100%'/><text x='50%' y='46%' text-anchor='middle' font-size='58' fill='#6f1f10'>🍛</text><text x='50%' y='60%' text-anchor='middle' font-size='38' fill='#6f1f10' font-family='Noto Sans Tamil, sans-serif'>${label}</text></svg>`
+  )}`;
 }
 
 async function shareDishLink(dish) {

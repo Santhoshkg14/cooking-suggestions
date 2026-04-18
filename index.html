@@ -38,32 +38,21 @@
 
       <section>
         <h2 class="section-title">இன்றைய 2 கறி பரிந்துரைகள்</h2>
-        <p class="assistive-text">முதல் பரிந்துரை இன்றைய முக்கிய கறி.</p>
+        <p class="assistive-text">படத்தைத் தொட்டால் நேராக YouTube செய்முறைக்கு செல்லும்.</p>
         <div id="cards" class="cards"></div>
       </section>
     </main>
 
     <template id="cardTemplate">
       <article class="card">
-        <img class="dish-image" />
+        <a class="image-link" target="_blank" rel="noopener noreferrer">
+          <img class="dish-image" />
+        </a>
         <div class="card-head">
           <h3 class="tamil-name"></h3>
           <p class="english-name"></p>
         </div>
-        <div class="meta-grid">
-          <p><strong>வகை:</strong> <span class="category"></span></p>
-          <p><strong>காரம்:</strong> <span class="spice"></span></p>
-          <p><strong>சமைக்கும் நேரம்:</strong> <span class="time"></span></p>
-        </div>
-        <div class="block">
-          <h4>பொருட்கள்</h4>
-          <ul class="ingredients"></ul>
-        </div>
-        <div class="block">
-          <h4>செய்முறை</h4>
-          <ol class="steps"></ol>
-        </div>
-        <div class="tip"><strong>சமையல் குறிப்பு:</strong> <span class="tip-text"></span></div>
+        <p class="mini-note">இன்றைய எளிய தேர்வு</p>
         <div class="card-actions">
           <a class="btn btn-video video-link" target="_blank" rel="noopener noreferrer">📺 YouTube-ல் செய்முறை பார்க்க</a>
           <button class="btn btn-share share-link" type="button">🔗 இணைப்பைப் பகிர்</button>

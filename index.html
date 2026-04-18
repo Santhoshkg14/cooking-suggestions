@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ta">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>அம்மாவின் சமையல் உதவியாளர்</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Serif+Tamil:wght@500;700&family=Noto+Sans+Tamil:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <main class="container">
+      <header class="hero">
+        <p class="tag">வீட்டுச் சமையலுக்கான எளிய தேர்வு</p>
+        <h1>அம்மாவின் சமையல் உதவியாளர்</h1>
+        <p id="dateLabel" class="date-label"></p>
+      </header>
+
+      <section class="controls top-strip" aria-label="வார நாட்கள்">
+        <div id="weekStrip" class="week-strip"></div>
+      </section>
+
+      <section class="controls filter-row" aria-label="வடிகட்டிகள்">
+        <label class="toggle">
+          <input type="checkbox" id="vegOnlyToggle" checked />
+          <span>சைவம் மட்டும்</span>
+        </label>
+        <p id="timeContext" class="time-context" aria-live="polite"></p>
+      </section>
+
+      <section class="controls button-row">
+        <button id="shuffleBtn" class="btn btn-primary">வேறு கறி பரிந்துரைக்க</button>
+        <button id="speakAllBtn" class="btn btn-secondary">எல்லாவற்றையும் சொல்</button>
+      </section>
+
+      <section>
+        <h2 class="section-title">இன்றைய 2 கறி பரிந்துரைகள்</h2>
+        <p class="assistive-text">முதல் பரிந்துரை இன்றைய முக்கிய கறி.</p>
+        <div id="cards" class="cards"></div>
+      </section>
+    </main>
+
+    <template id="cardTemplate">
+      <article class="card">
+        <div class="card-head">
+          <h3 class="tamil-name"></h3>
+          <p class="english-name"></p>
+        </div>
+        <div class="meta-grid">
+          <p><strong>வகை:</strong> <span class="category"></span></p>
+          <p><strong>காரம்:</strong> <span class="spice"></span></p>
+          <p><strong>சமைக்கும் நேரம்:</strong> <span class="time"></span></p>
+        </div>
+        <div class="block">
+          <h4>பொருட்கள்</h4>
+          <ul class="ingredients"></ul>
+        </div>
+        <div class="block">
+          <h4>செய்முறை</h4>
+          <ol class="steps"></ol>
+        </div>
+        <div class="tip"><strong>சமையல் குறிப்பு:</strong> <span class="tip-text"></span></div>
+        <button class="btn btn-listen listen-btn">🔊 கேளுங்கள்</button>
+      </article>
+    </template>
+
+    <script src="script.js"></script>
+  </body>
+</html>

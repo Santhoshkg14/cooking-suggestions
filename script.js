@@ -213,7 +213,6 @@ async function resolveDishImage(dish, imageNode) {
   if (imageCache.has(dish.id)) {
     const cached = imageCache.get(dish.id);
     if (cached) imageNode.src = cached;
-    else hideImage(imageNode);
     return;
   }
 
@@ -232,8 +231,9 @@ async function resolveDishImage(dish, imageNode) {
     }
   }
 
-  imageCache.set(dish.id, "");
-  hideImage(imageNode);
+  const backup = getQueryImage(dish);
+  imageCache.set(dish.id, backup);
+  imageNode.src = backup;
 }
 
 async function fetchWikimediaImage(term) {
@@ -249,10 +249,9 @@ async function fetchWikimediaImage(term) {
   }
 }
 
-function hideImage(imageNode) {
-  imageNode.style.display = "none";
-  const wrapper = imageNode.closest(".image-link");
-  if (wrapper) wrapper.style.display = "none";
+function getQueryImage(dish) {
+  const query = `${dish.englishName} south indian curry food`;
+  return `https://source.unsplash.com/900x550/?${encodeURIComponent(query)}`;
 }
 
 async function shareDishLink(dish) {

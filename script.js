@@ -85,6 +85,7 @@ const vegOnlyToggle = document.getElementById("vegOnlyToggle");
 const shuffleBtn = document.getElementById("shuffleBtn");
 const voiceBtn = document.getElementById("voiceBtn");
 const voiceStatus = document.getElementById("voiceStatus");
+const imageCache = new Map();
 
 init();
 
@@ -186,15 +187,13 @@ function renderCards() {
   currentSuggestions.forEach((dish, index) => {
     const clone = template.content.cloneNode(true);
     const image = clone.querySelector(".dish-image");
-    image.src = getDishImage(dish);
+    image.src = "";
     image.alt = dish.tamilName;
     image.loading = "lazy";
     const youtubeLink = getYouTubeLink(dish);
     const imageLink = clone.querySelector(".image-link");
     imageLink.href = youtubeLink;
-    image.addEventListener("error", () => {
-      image.src = getDishImage(dish);
-    });
+    resolveDishImage(dish, image);
     clone.querySelector(".tamil-name").textContent = `${index === 0 ? "⭐ " : ""}${dish.tamilName}`;
     clone.querySelector(".english-name").textContent = dish.englishName;
     const link = clone.querySelector(".video-link");
@@ -210,14 +209,50 @@ function getYouTubeLink(dish) {
   return `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}&sp=EgIQAQ%253D%253D`;
 }
 
-function getDishImage(dish) {
-  const icon = dish.vegetarian ? "🥗" : "🍗";
-  const level = dish.spice === "கார கார" ? "#b71c1c" : dish.spice === "மிதமான" ? "#d84315" : "#ef6c00";
-  const sub = `${dish.category} • ${dish.spice}`;
-  const label = dish.tamilName;
-  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(
-    `<svg xmlns='http://www.w3.org/2000/svg' width='900' height='550'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0%' stop-color='#ffe0cc'/><stop offset='100%' stop-color='#ffb082'/></linearGradient></defs><rect fill='url(#g)' width='100%' height='100%'/><rect x='28' y='28' width='844' height='494' rx='24' fill='rgba(255,255,255,0.42)' stroke='${level}' stroke-width='4'/><text x='50%' y='42%' text-anchor='middle' font-size='82'>${icon}</text><text x='50%' y='56%' text-anchor='middle' font-size='50' fill='#5d1d10' font-family='Noto Serif Tamil, serif'>${label}</text><text x='50%' y='68%' text-anchor='middle' font-size='32' fill='${level}' font-family='Noto Sans Tamil, sans-serif'>${sub}</text></svg>`
-  )}`;
+async function resolveDishImage(dish, imageNode) {
+  if (imageCache.has(dish.id)) {
+    const cached = imageCache.get(dish.id);
+    if (cached) imageNode.src = cached;
+    else hideImage(imageNode);
+    return;
+  }
+
+  const searchTerms = [
+    `${dish.englishName} curry`,
+    `${dish.englishName} dish`,
+    `${dish.tamilName} உணவு`
+  ];
+
+  for (const term of searchTerms) {
+    const url = await fetchWikimediaImage(term);
+    if (url) {
+      imageCache.set(dish.id, url);
+      imageNode.src = url;
+      return;
+    }
+  }
+
+  imageCache.set(dish.id, "");
+  hideImage(imageNode);
+}
+
+async function fetchWikimediaImage(term) {
+  try {
+    const api = `https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(term)}&gsrlimit=1&prop=pageimages&piprop=thumbnail&pithumbsize=900&format=json&origin=*`;
+    const res = await fetch(api);
+    if (!res.ok) return "";
+    const data = await res.json();
+    const page = Object.values(data?.query?.pages || {})[0];
+    return page?.thumbnail?.source || "";
+  } catch {
+    return "";
+  }
+}
+
+function hideImage(imageNode) {
+  imageNode.style.display = "none";
+  const wrapper = imageNode.closest(".image-link");
+  if (wrapper) wrapper.style.display = "none";
 }
 
 async function shareDishLink(dish) {
